@@ -133,7 +133,7 @@ def measurementProcess(initA, finalA, incrementAngle, timePerStep, filepath):
 
         instanceTxt = open(nameArchiveBis, 'a')
         stringSetAngle = "{:.3f}".format(setAngle)
-        stringWrite = "{},{}".format(stringSetAngle, acumMed).strip("\n")
+        stringWrite = "{} {}".format(stringSetAngle, acumMed).strip("\n")
         stringWrite = stringWrite + "\r"
         
         instanceTxt.write(stringWrite)
