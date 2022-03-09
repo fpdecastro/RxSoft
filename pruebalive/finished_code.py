@@ -13,15 +13,15 @@ index = count()
 
 
 def animate(i):
-    data = pd.read_csv('data.csv')
-    x = data['x_value']
-    y1 = data['total_1']
-    y2 = data['total_2']
+    data = pd.read_csv('data.txt', sep=" ", header=None)
+    x = data[0]
+    y1 = data[1]
+    # y2 = data['total_2']
 
     plt.cla()
-
+    
     plt.plot(x, y1, label='Channel 1')
-    plt.plot(x, y2, label='Channel 2')
+    # plt.plot(x, y2, label='Channel 2')
 
     plt.legend(loc='upper left')
     plt.tight_layout()
