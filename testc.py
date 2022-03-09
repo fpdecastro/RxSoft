@@ -6,11 +6,13 @@ from tkinter import StringVar, filedialog
 from tkinter import messagebox
 import os
 
+import pandas as pd
 from tkinter.constants import CENTER, INSERT, LEFT
 import matplotlib.pyplot as plt
 from matplotlib import style 
 from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 from measureProcessPath import *
 
@@ -32,25 +34,27 @@ Font_tuple_botton = ("Courier", 9)
 
 style.use('ggplot')
 
-fig = plt.Figure(figsize=(12,5), dpi=60)
+fig = Figure(figsize=(12,5), dpi=60)
 ax = fig.add_subplot(111)
 GLOBALPATH = ""
 
 def animate(i):
-    xList = []
-    yList = []
-    if(os.path.isfile(GLOBALPATH)):
-        pullData = open(GLOBALPATH, "r").read()
-        dataList = pullData.split("\n")
-        for eachLine in dataList:
-            if len(eachLine) > 1:
-                x, y = eachLine.split(",")
-                xList.append(int(x))
-                yList.append(int(y))
-    ax.clear()
-    ax.plot(xList, yList, label="Cnt/s")
-    # ax1.legend(loc='upper left')
 
+    # newPath = "./pruebalive/data.txt"
+    if(os.path.isfile(GLOBALPATH)):
+    # print("hola como estas")
+    # if(os.path.isfile(newPath)):
+
+        # data = pd.read_csv(newPath, sep=" ", header=None)
+        data = pd.read_csv(GLOBALPATH, sep=" ", header=None)
+        x = data[0]
+        y = data[1]
+    
+        ax.cla()
+        ax.plot(x, y, label="Cnt/s")
+        # ax.legend(loc='upper left')
+    else:
+        print("El GLOBAL PATH no es correcto")
 
 
 
@@ -430,7 +434,8 @@ class Application(ttk.Frame):
             self.finalA = float(self.items["finalAngle"])
             self.incremenA = float(self.items["sizeOfsteps"])
             self.timeStep = float(self.items["time"])
-            measurementProcess(self.initA,self.finalA,self.incremenA,self.timeStep,GLOBALPATH)
+            # measurementProcess(self.initA,self.finalA,self.incremenA,self.timeStep,GLOBALPATH)
+            print(self.initA,self.finalA,self.incremenA,self.timeStep,GLOBALPATH)
 
 main_window = tk.Tk()
 app = Application(main_window)

@@ -84,10 +84,10 @@ def measurementProcess(initA, finalA, incrementAngle, timePerStep, filepath):
     #serialInstance(baudrate, port, bytesize, parity, stopbits)
     timeout = timePerStep + SECURITYTIME
     GONIOMETRO = se.Serial()
-    GONIOMETRO = parametersSerial( GONIOMETRO, 9600, '/dev/ttyUSB1', 8, 'N', 1, timeout)
+    GONIOMETRO = parametersSerial( GONIOMETRO, 9600, '', 8, 'N', 1, timeout)
     #CONNECTION WITH MEASURINGMACHINE
     MEASURINGMACHINE = se.Serial()
-    MEASURINGMACHINE = parametersSerial( MEASURINGMACHINE, 4800, '/dev/ttyUSB0', 8, 'N', 1, timeout)
+    MEASURINGMACHINE = parametersSerial( MEASURINGMACHINE, 4800, '', 8, 'N', 1, timeout)
 
     try:
         GONIOMETRO.open()
