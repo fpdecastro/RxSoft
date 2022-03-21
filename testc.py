@@ -441,6 +441,7 @@ class Application(ttk.Frame):
             # Waiting the goniometer to reach the angle
 
         #Destoy classes. Serials and xlswriter
+        initialCondition(GONIOMETRO)
         destroy(GONIOMETRO, MEASURINGMACHINE)
 
     def canceledMedition(self):
