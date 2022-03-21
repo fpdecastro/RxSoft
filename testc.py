@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-# from _typeshed import Self
-from tkinter import ttk
+import random
+from itertools import count
+from tkinter import Y, ttk
 import tkinter as tk
 from tkinter import StringVar, filedialog
 from tkinter import messagebox
@@ -11,14 +12,18 @@ from tkinter.constants import CENTER, INSERT, LEFT
 import matplotlib.pyplot as plt
 from matplotlib import style 
 from matplotlib.animation import FuncAnimation
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 from measureProcessPath import *
 
+import numpy as np
+import scipy as sc
 
 
-HEIGHT=600
+
+
+HEIGHT=650
 WIDTH=700
 STRINGDIMENSION = str(WIDTH) + "x" + str(HEIGHT)
 
@@ -33,30 +38,9 @@ Font_tuple_botton = ("Courier", 9)
 
 
 style.use('ggplot')
-
 fig = Figure(figsize=(12,5), dpi=60)
 ax = fig.add_subplot(111)
 GLOBALPATH = ""
-
-def animate(i):
-
-    # newPath = "./pruebalive/data.txt"
-    if(os.path.isfile(GLOBALPATH)):
-    # print("hola como estas")
-    # if(os.path.isfile(newPath)):
-
-        # data = pd.read_csv(newPath, sep=" ", header=None)
-        data = pd.read_csv(GLOBALPATH, sep=" ", header=None)
-        x = data[0]
-        y = data[1]
-    
-        ax.cla()
-        ax.plot(x, y, label="Cnt/s")
-        # ax.legend(loc='upper left')
-    else:
-        print("El GLOBAL PATH no es correcto")
-
-
 
 
 class Application(ttk.Frame):
@@ -130,12 +114,27 @@ class Application(ttk.Frame):
         self.c4_finalangle = tk.Label(self.meditionTab, text="tiempo por paso", wraplength=100, font = Font_tuple_sublabel, bg=from_rgb((0,10,20)), fg="white")
         self.c4_finalangle.place(x=572, y=175+15+29, width=95, height=39)
 
-        self.canvas = FigureCanvasTkAgg(fig, self.graphicsTab)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH)
-
         self.stringPath = r""
         self.place(width=WIDTH, height=HEIGHT)
+
+        Fig = Figure(figsize=(12,5), dpi=60)
+        FigSubPlot = Fig.add_subplot(111)
+        self.x = []
+        self.y = []
+        self.count = 0
+        self.line1, = FigSubPlot.plot(self.x,self.y,"r-")
+        self.canvas = FigureCanvasTkAgg(Fig, master = self.graphicsTab)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH)
+        self.update()
+
+    def refreshFigure(self,x,y):
+        print("Estamos tratando de graficar")
+        self.line1.set_data(x,y)
+        ax = self.canvas.figure.axes[0]
+        ax.set_xlim(x.min(), x.max())
+        ax.set_ylim(y.min(), y.max())
+        self.canvas.draw()
 
 
     def folderBrowse(self):
@@ -155,23 +154,27 @@ class Application(ttk.Frame):
             messagebox.showinfo('Message', "Elegir una opción válida")
         else:
             self.amountOfMedition = int(self.comboExample.get())
-        
             if(self.amountOfMedition == 1):
                 self.firstmedition()
+                self.heightCanceledButton = 273+(15+29)*2
                 self.meditionButton = tk.Button(self.meditionTab, text="Empezar medición", font=Font_tuple_botton, borderwidth="5", command=self.saveValues)
+                # self.meditionButton.place(x= (WIDTH-130)/2,y=273+15+29, width=130, height=29)
                 self.meditionButton.place(x= (WIDTH-130)/2,y=273+15+29, width=130, height=29)
             elif (self.amountOfMedition == 2):
+                self.heightCanceledButton = 273+(15+29)*3
                 self.firstmedition()
                 self.secondmedition()
                 self.meditionButton = tk.Button(self.meditionTab, text="Empezar medición", font=Font_tuple_botton, borderwidth="5", command=self.saveValues)
                 self.meditionButton.place(x= (WIDTH-130)/2,y=273+(15+29)*2, width=130, height=29)
             elif (self.amountOfMedition == 3):
+                self.heightCanceledButton = 273+(15+29)*4
                 self.firstmedition()
                 self.secondmedition()
                 self.thirdmedition()
                 self.meditionButton = tk.Button(self.meditionTab, text="Empezar medición", font=Font_tuple_botton, borderwidth="5", command=self.saveValues)
                 self.meditionButton.place(x= (WIDTH-130)/2,y=273+(15+29)*3, width=130, height=29)
             elif (self.amountOfMedition == 4 ):
+                self.heightCanceledButton = 273+(15+29)*5
                 self.firstmedition()
                 self.secondmedition()
                 self.thirdmedition()
@@ -179,6 +182,7 @@ class Application(ttk.Frame):
                 self.meditionButton = tk.Button(self.meditionTab, text="Empezar medición", font=Font_tuple_botton, borderwidth="5", command=self.saveValues)
                 self.meditionButton.place(x= (WIDTH-130)/2,y=273+(15+29)*4, width=130, height=29)
             elif (self.amountOfMedition == 5 ):
+                self.heightCanceledButton = 273+(15+29)*6
                 self.firstmedition()
                 self.secondmedition()
                 self.thirdmedition()
@@ -357,11 +361,115 @@ class Application(ttk.Frame):
         print(numberOfIntervals, self.timePerStepsFunction(sA), tm + 0.3)
         totalTime = numberOfIntervals * (self.timePerStepsFunction(sA) + ( tm +0.3))
         return totalTime/3600
+
+    def measurementProcess(self, initA, finalA, incrementAngle, timePerStep, filepath):
+        amountOfStep = math.floor((finalA-initA)/incrementAngle)
+        print("La cantidad de pasos a realizar son: {}".format(amountOfStep))
+
+        #CONNECTION WITH GONIOMETRO
+        #serialInstance(baudrate, port, bytesize, parity, stopbits)
+        timeout = timePerStep + SECURITYTIME
+        GONIOMETRO = se.Serial()
+        GONIOMETRO = parametersSerial( GONIOMETRO, 9600, '', 8, 'N', 1, timeout)
+        #CONNECTION WITH MEASURINGMACHINE
+        MEASURINGMACHINE = se.Serial()
+        MEASURINGMACHINE = parametersSerial( MEASURINGMACHINE, 4800, '', 8, 'N', 1, timeout)
+
+        try:
+            GONIOMETRO.open()
+            MEASURINGMACHINE.open()
+        except se.serialutil.SerialException:
+            GONIOMETRO.open()
+            MEASURINGMACHINE.open()
+            print("\nNo se pudo realizar la conexion, fijese si son correctos los parametros de coneccion")
+            checkConnection(GONIOMETRO, MEASURINGMACHINE)
+            exit()
+
+        checkConnection(GONIOMETRO, MEASURINGMACHINE)
         
+        setAngle = initA
+
+
+        nameArchiveBis = filepath
+        instanceTxt = open(nameArchiveBis, 'a')
+        instanceTxt.close()
+
+        # Set the angle in the Initial angle
+        setTheAngleInGoniometro = 'SAN '+ str(setAngle) + '\r'
+        # Waiting the goniometer to reach the angle
+        angleReached(GONIOMETRO, setTheAngleInGoniometro)
+
+        setGoniometerMod = 'MOD 3\r'
+        angleReached(GONIOMETRO, setGoniometerMod)
+
+        self.startMedition()
+
+        while(setAngle <= finalA):
+
+            if(self.stateMedition == 0):
+                initialCondition(GONIOMETRO)
+                destroy(GONIOMETRO, MEASURINGMACHINE)
+                messagebox.showinfo('Message', "La medición se cancelo exitosamente")
+                break
+
+            # Build a command
+            command = "MCR " + str(timePerStep) + '\r'
+            # Send a command to medition machine
+
+            medition = meditionReached(MEASURINGMACHINE, command)
+            acumMed = transformString(medition,1)
+            
+            print("{:.3f} {}".format(setAngle, medition))
+            print("El valor obtenido es:", acumMed)
+
+            setAngle = setAngle + incrementAngle
+
+            instanceTxt = open(nameArchiveBis, 'a')
+            stringSetAngle = "{:.3f}".format(setAngle)
+            stringWrite = "{} {}".format(stringSetAngle, acumMed).strip("\n")
+            stringWrite = stringWrite + "\r"
+
+            self.x.append(round(setAngle,3))
+            self.y.append(round(acumMed))
+            
+            instanceTxt.write(stringWrite)
+            instanceTxt.close
+
+            setTheAngleInGoniometro = 'STM {:.3f} 0\r'.format(incrementAngle)
+            angleReached(GONIOMETRO, setTheAngleInGoniometro)
+
+            # Waiting the goniometer to reach the angle
+
+        #Destoy classes. Serials and xlswriter
+        destroy(GONIOMETRO, MEASURINGMACHINE)
+
+    def canceledMedition(self):
+        self.stateMedition = 0
+        self.x = []
+        self.y = []
+
+    def startMedition(self):
+        if(self.stateMedition == 1):
+                X = np.array(self.x)
+                Y = np.array(self.y)
+                print(X)
+                print(Y)
+                self.refreshFigure(X,Y)
+                app.after(2000,self.startMedition)
+
+
 
 
     def saveValues(self):
-        
+
+        self.canceledButton = tk.Button(self.meditionTab, text="Cancelar medición", font=Font_tuple_botton, borderwidth="5", command=self.canceledMedition)
+        self.canceledButton.place(x= (WIDTH-130)/2,y=self.heightCanceledButton, width=130, height=29)
+
+        self.stateMedition = 1
+
+        # self.startMedition()
+
+
         while(not os.path.exists(self.stringPath)):
             messagebox.showinfo('Message', "el directorio ingresado no es válido ")
             return None
@@ -424,12 +532,9 @@ class Application(ttk.Frame):
 
         self.mssg = "El tiempo estimado es de {} hs {} min ".format(int(self.parte_entera), round(60*self.parte_decimal))
         messagebox.showinfo('Message', self.mssg)
-        
-
 
 
         for self.items in self.listOfTuple:
-            # print(float(self.items["initAngle"]))
             self.initA = float(self.items["initAngle"])
             self.finalA = float(self.items["finalAngle"])
             self.incremenA = float(self.items["sizeOfsteps"])
@@ -439,5 +544,5 @@ class Application(ttk.Frame):
 
 main_window = tk.Tk()
 app = Application(main_window)
-ani = FuncAnimation(fig, animate, interval=1000)
+# ani = FuncAnimation(fig, animate, interval=1000)
 app.mainloop()
