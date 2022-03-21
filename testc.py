@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import StringVar, filedialog
 from tkinter import messagebox
 import os
+import threading 
 
 import pandas as pd
 from tkinter.constants import CENTER, INSERT, LEFT
@@ -362,13 +363,13 @@ class Application(ttk.Frame):
         totalTime = numberOfIntervals * (self.timePerStepsFunction(sA) + ( tm +0.3))
         return totalTime/3600
 
-    def measurementProcess(self, initA, finalA, incrementAngle, timePerStep, filepath):
-        amountOfStep = math.floor((finalA-initA)/incrementAngle)
+    def measurementProcess(self, initA):
+        amountOfStep = math.floor((self.finalA-self.initA)/self.incrementA)
         print("La cantidad de pasos a realizar son: {}".format(amountOfStep))
 
         #CONNECTION WITH GONIOMETRO
         #serialInstance(baudrate, port, bytesize, parity, stopbits)
-        timeout = timePerStep + SECURITYTIME
+        timeout = self.timeStep + SECURITYTIME
         GONIOMETRO = se.Serial()
         GONIOMETRO = parametersSerial( GONIOMETRO, 9600, '', 8, 'N', 1, timeout)
         #CONNECTION WITH MEASURINGMACHINE
@@ -387,10 +388,10 @@ class Application(ttk.Frame):
 
         checkConnection(GONIOMETRO, MEASURINGMACHINE)
         
-        setAngle = initA
+        setAngle = self.initA
 
 
-        nameArchiveBis = filepath
+        nameArchiveBis = GLOBALPATH
         instanceTxt = open(nameArchiveBis, 'a')
         instanceTxt.close()
 
@@ -404,7 +405,7 @@ class Application(ttk.Frame):
 
         self.startMedition()
 
-        while(setAngle <= finalA):
+        while(setAngle <= self.finalA):
 
             if(self.stateMedition == 0):
                 initialCondition(GONIOMETRO)
@@ -413,7 +414,7 @@ class Application(ttk.Frame):
                 break
 
             # Build a command
-            command = "MCR " + str(timePerStep) + '\r'
+            command = "MCR " + str(self.timeStep) + '\r'
             # Send a command to medition machine
 
             medition = meditionReached(MEASURINGMACHINE, command)
@@ -422,7 +423,7 @@ class Application(ttk.Frame):
             print("{:.3f} {}".format(setAngle, medition))
             print("El valor obtenido es:", acumMed)
 
-            setAngle = setAngle + incrementAngle
+            setAngle = setAngle + self.incrementAngle
 
             instanceTxt = open(nameArchiveBis, 'a')
             stringSetAngle = "{:.3f}".format(setAngle)
@@ -435,7 +436,7 @@ class Application(ttk.Frame):
             instanceTxt.write(stringWrite)
             instanceTxt.close
 
-            setTheAngleInGoniometro = 'STM {:.3f} 0\r'.format(incrementAngle)
+            setTheAngleInGoniometro = 'STM {:.3f} 0\r'.format(self.incrementAngle)
             angleReached(GONIOMETRO, setTheAngleInGoniometro)
 
             # Waiting the goniometer to reach the angle
@@ -538,10 +539,12 @@ class Application(ttk.Frame):
         for self.items in self.listOfTuple:
             self.initA = float(self.items["initAngle"])
             self.finalA = float(self.items["finalAngle"])
-            self.incremenA = float(self.items["sizeOfsteps"])
+            self.incrementA = float(self.items["sizeOfsteps"])
             self.timeStep = float(self.items["time"])
-            # measurementProcess(self.initA,self.finalA,self.incremenA,self.timeStep,GLOBALPATH)
-            print(self.initA,self.finalA,self.incremenA,self.timeStep,GLOBALPATH)
+            self.measurementProcess(self.initA,self.finalA,self.incrementA,self.timeStep,GLOBALPATH)
+
+            processThread = threading.Thread(target=self.measurementProcess)
+            processThread.start()
 
 main_window = tk.Tk()
 app = Application(main_window)
