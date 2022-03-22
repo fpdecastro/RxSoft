@@ -451,13 +451,14 @@ class Application(ttk.Frame):
         self.y = []
 
     def startMedition(self):
-        if(self.stateMedition == 1 and self.x != [] and self.y != []):
+        if(self.stateMedition == 1):
+            if(self.x != [] and self.y != []):
                 X = np.array(self.x)
                 Y = np.array(self.y)
                 print(X)
                 print(Y)
                 self.refreshFigure(X,Y)
-                app.after(2000,self.startMedition)
+            app.after(2000,self.startMedition)
 
 
     def saveValues(self):
@@ -467,7 +468,7 @@ class Application(ttk.Frame):
 
         self.stateMedition = 1
 
-        # self.startMedition()
+        self.startMedition()
 
 
         while(not os.path.exists(self.stringPath)):
@@ -544,8 +545,6 @@ class Application(ttk.Frame):
             processThread.daemon = True
             processThread.start()
 
-def graphicInterfecace():
-    main_window = tk.Tk()
-    app = Application(main_window)
-    # ani = FuncAnimation(fig, animate, interval=1000)
-    app.mainloop()
+main_window = tk.Tk()
+app = Application(main_window)
+app.mainloop()
