@@ -74,7 +74,7 @@ def transformString( medition, direction):
                 break
     else:
         exit()
-    return stringNumber
+    return float(stringNumber)*1000
 
     
 def meditionReached(serialObject, command):

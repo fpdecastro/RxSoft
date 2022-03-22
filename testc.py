@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import StringVar, filedialog
 from tkinter import messagebox
 import os
-import threading 
+import threading
 
 import pandas as pd
 from tkinter.constants import CENTER, INSERT, LEFT
@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 from measureProcessPath import *
 
 import numpy as np
-import scipy as sc
+# import scipy as sc
 
 
 
@@ -41,7 +41,7 @@ Font_tuple_botton = ("Courier", 9)
 style.use('ggplot')
 fig = Figure(figsize=(12,5), dpi=60)
 ax = fig.add_subplot(111)
-GLOBALPATH = ""
+# self.globalpath = ""
 
 
 class Application(ttk.Frame):
@@ -130,7 +130,6 @@ class Application(ttk.Frame):
         self.update()
 
     def refreshFigure(self,x,y):
-        print("Estamos tratando de graficar")
         self.line1.set_data(x,y)
         ax = self.canvas.figure.axes[0]
         ax.set_xlim(x.min(), x.max())
@@ -364,17 +363,17 @@ class Application(ttk.Frame):
         return totalTime/3600
 
     def measurementProcess(self):
-        amountOfStep = math.floor((self.finalA-self.initA)/self.incrementA)
+        amountOfStep = math.floor((self.finalA-self.initA)/self.incrementAngle)
         print("La cantidad de pasos a realizar son: {}".format(amountOfStep))
 
         #CONNECTION WITH GONIOMETRO
         #serialInstance(baudrate, port, bytesize, parity, stopbits)
         timeout = self.timeStep + SECURITYTIME
         GONIOMETRO = se.Serial()
-        GONIOMETRO = parametersSerial( GONIOMETRO, 9600, '', 8, 'N', 1, timeout)
+        GONIOMETRO = parametersSerial( GONIOMETRO, 9600, 'COM6', 8, 'N', 1, timeout)
         #CONNECTION WITH MEASURINGMACHINE
         MEASURINGMACHINE = se.Serial()
-        MEASURINGMACHINE = parametersSerial( MEASURINGMACHINE, 4800, '', 8, 'N', 1, timeout)
+        MEASURINGMACHINE = parametersSerial( MEASURINGMACHINE, 4800, 'COM7', 8, 'N', 1, timeout)
 
         try:
             GONIOMETRO.open()
@@ -391,7 +390,8 @@ class Application(ttk.Frame):
         setAngle = self.initA
 
 
-        nameArchiveBis = GLOBALPATH
+        nameArchiveBis = self.globalpath
+        print("El ARCHIVE QUE NO ANDA ES ESTE ", self.globalpath)
         instanceTxt = open(nameArchiveBis, 'a')
         instanceTxt.close()
 
@@ -431,7 +431,7 @@ class Application(ttk.Frame):
             stringWrite = stringWrite + "\r"
 
             self.x.append(round(setAngle,3))
-            self.y.append(round(acumMed))
+            self.y.append(round(acumMed,1))
             
             instanceTxt.write(stringWrite)
             instanceTxt.close
@@ -451,15 +451,13 @@ class Application(ttk.Frame):
         self.y = []
 
     def startMedition(self):
-        if(self.stateMedition == 1):
+        if(self.stateMedition == 1 and self.x != [] and self.y != []):
                 X = np.array(self.x)
                 Y = np.array(self.y)
                 print(X)
                 print(Y)
                 self.refreshFigure(X,Y)
                 app.after(2000,self.startMedition)
-
-
 
 
     def saveValues(self):
@@ -479,7 +477,7 @@ class Application(ttk.Frame):
         self.stringPathFile = r""
         self.stringPathFile = self.stringPathFile + self.stringPath + "/" + self.nameOfFile.get()
         print(self.stringPathFile)
-        GLOBALPATH  = self.stringPathFile
+        self.globalpath  = self.stringPathFile
 
         self.listOfTuple = []
         if (self.amountOfMedition >= 1):
@@ -539,7 +537,7 @@ class Application(ttk.Frame):
         for self.items in self.listOfTuple:
             self.initA = float(self.items["initAngle"])
             self.finalA = float(self.items["finalAngle"])
-            self.incrementA = float(self.items["sizeOfsteps"])
+            self.incrementAngle = float(self.items["sizeOfsteps"])
             self.timeStep = float(self.items["time"])
             self.measurementProcess()
 

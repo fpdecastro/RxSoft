@@ -67,7 +67,7 @@ if __name__ == "__main__":
         if option == 1 or option == 2:
             if option == 1:
                 goniometer = serial.Serial()
-                goniometer.port = '/dev/ttyUSB1'
+                goniometer.port = 'COM6'
                 goniometer.baudrate = 9600
                 goniometer.stopbits = 1
                 goniometer.bytesize = 8
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             else:
 
                 sensormachine = serial.Serial()
-                sensormachine.port = '/dev/ttyUSB0'
+                sensormachine.port = 'COM7'
                 sensormachine.baudrate = 4800
                 sensormachine.stopbits = 1
                 sensormachine.bytesize = 8
