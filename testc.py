@@ -539,12 +539,13 @@ class Application(ttk.Frame):
             self.finalA = float(self.items["finalAngle"])
             self.incrementAngle = float(self.items["sizeOfsteps"])
             self.timeStep = float(self.items["time"])
-            self.measurementProcess()
-
+            
             processThread = threading.Thread(target=self.measurementProcess)
+            processThread.daemon = True
             processThread.start()
 
-main_window = tk.Tk()
-app = Application(main_window)
-# ani = FuncAnimation(fig, animate, interval=1000)
-app.mainloop()
+def graphicInterfecace():
+    main_window = tk.Tk()
+    app = Application(main_window)
+    # ani = FuncAnimation(fig, animate, interval=1000)
+    app.mainloop()
