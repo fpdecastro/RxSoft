@@ -363,7 +363,7 @@ class Application(ttk.Frame):
         totalTime = numberOfIntervals * (self.timePerStepsFunction(sA) + ( tm +0.3))
         return totalTime/3600
 
-    def measurementProcess(self, initA):
+    def measurementProcess(self):
         amountOfStep = math.floor((self.finalA-self.initA)/self.incrementA)
         print("La cantidad de pasos a realizar son: {}".format(amountOfStep))
 
@@ -541,7 +541,7 @@ class Application(ttk.Frame):
             self.finalA = float(self.items["finalAngle"])
             self.incrementA = float(self.items["sizeOfsteps"])
             self.timeStep = float(self.items["time"])
-            self.measurementProcess(self.initA,self.finalA,self.incrementA,self.timeStep,GLOBALPATH)
+            self.measurementProcess()
 
             processThread = threading.Thread(target=self.measurementProcess)
             processThread.start()
